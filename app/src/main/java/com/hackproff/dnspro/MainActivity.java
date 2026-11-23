@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.net.VpnService;
+import android.net.Uri;
 import android.os.*;
+import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.*;
@@ -49,6 +51,12 @@ public class MainActivity extends Activity {
         getSharedPreferences("p", 0).edit().putBoolean("enabled", true).apply();
         Intent s = new Intent(this, DnsVpnService.class);
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(s); else startService(s);
+        if (Build.VERSION.SDK_INT >= 23 && !getSharedPreferences("p", 0).getBoolean("asked", false)) {
+            getSharedPreferences("p", 0).edit().putBoolean("asked", true).apply();
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            if (!pm.isIgnoringBatteryOptimizations(getPackageName()))
+                startActivity(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + getPackageName())));
+        }
     }
     void stop() {
         getSharedPreferences("p", 0).edit().putBoolean("enabled", false).apply();
